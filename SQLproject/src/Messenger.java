@@ -138,6 +138,8 @@ class MessengerChat extends JFrame{
 	JPanel nowChatRoom = new JPanel();	//현재 들어가진 채팅방 표시
 	JLabel noneRoom = new JLabel("열린 채팅방이 없습니다.");
 	
+	JLabel UID = new JLabel("UID");
+	
 	public MessengerChat() {
 		setTitle("Chat Room");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -175,6 +177,8 @@ class MessengerChat extends JFrame{
 		pane.add("오픈 채팅방", openChatRoom);
 		pane.add("현재 채팅방", nowChatRoom);
 		add(pane);
+		
+		add(UID,BorderLayout.SOUTH);
 	}
 }
 

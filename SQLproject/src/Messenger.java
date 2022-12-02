@@ -224,6 +224,7 @@ class MessengerChat extends JFrame{
 		chatSelect.add(chatID);
 		chatSelect.add(inputRID);
 		chatSelect.add(enter);
+		chatSelect.add(deleteRoom);
 		add(chatSelect,BorderLayout.NORTH);
 		
 		personalChatRoom.add(new JScrollPane(personalRooms));
@@ -361,7 +362,6 @@ public class Messenger {
 		public void actionPerformed(ActionEvent e) {
 			Admin.dispose();
 			MC.pane.add("계정 관리", MC.adminPanel);
-			MC.chatSelect.add(MC.deleteRoom);
 		}
 	}
 

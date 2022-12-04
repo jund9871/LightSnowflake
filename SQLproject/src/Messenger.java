@@ -41,49 +41,38 @@ class MessengerRoomModel{
 	String room_name;
 	int room_num;
 	String host_id;
-	MessengerRoomModel(String RID, String room_name, int room_num, String host_id) {
+	String UID;
+	MessengerRoomModel(String RID, String room_name, int room_num, String host_id, String UID) {
 		this.RID = RID;
 		this.room_name = room_name;
 		this.room_num = room_num;
 		this.host_id = host_id;
-	}
-}
-
-class MessengerChattingModel{
-	int count_num;
-	String chat_log;
-	String write_time;
-	String RID;		//참조용 RID
-	String UID;		//참조용 UID
-	MessengerChattingModel(int count_num, String chat_log, String write_time, String RID, String UID) {
-		this.count_num = count_num;
-		this.chat_log = chat_log;
-		this.write_time = write_time;
-		this.RID = RID;
 		this.UID = UID;
 	}
 }
 
 class MessengerCustomerModel {
-	String customer_id;
+	String login_id;
 	String password;
 	String nickname;
-	String UID;
-	MessengerCustomerModel(String customer_id, String password, String nickname, String UID) {
-		this.customer_id = customer_id;
+	int UID;
+	MessengerCustomerModel(String login_id, String password, String nickname, int UID) {
+		this.login_id = login_id;
 		this.password = password;
 		this.nickname = nickname;
 		this.UID = UID;
 	}
 }
 
-class MessengerPersonalRoomModel {
-	String RID;
-	String FID;
-	String UID;
-	MessengerPersonalRoomModel(String RID, String FID, String UID) {
-		this.RID = RID;
-		this.FID = FID;
+class AccountDeleteModel {
+	String login_id;
+	String password;
+	String nickname;
+	int UID;
+	AccountDeleteModel(String login_id, String password, String nickname, int UID) {
+		this.login_id = login_id;
+		this.password = password;
+		this.nickname = nickname;
 		this.UID = UID;
 	}
 }
@@ -91,9 +80,11 @@ class MessengerPersonalRoomModel {
 class MessengerFriendModel{
 	String UID;
 	String FID;
-	MessengerFriendModel(String UID, String FID) {
+	String friend_nickname;
+	MessengerFriendModel(String UID, String FID, String friend_nickname) {
 		this.UID = UID;
 		this.FID = FID;
+		this.friend_nickname = friend_nickname;
 	}
 }
 
@@ -123,7 +114,7 @@ class MessengerLogin extends JFrame{
 		tf[1] = new JTextField(10);
 		btn[0] = new JButton("로그인");
 		btn[1] = new JButton("회원가입");
-		btn[2] = new JButton("비밀번호 찾기");		//원래는 본인인증 필요 여기선 X
+		btn[2] = new JButton("비밀번호 찾기");
 	}
 	void setComponent() {
 		input.setLayout(grid);
@@ -253,7 +244,7 @@ class MessengerChat extends JFrame{
 	String roomList[] = {"채팅방 이름","RID"};
 	JMenuBar mb = new JMenuBar();	//메뉴
 	JMenu settingMenu = new JMenu("설정");
-	JMenuItem item[] = new JMenuItem[4];
+	JMenuItem item[] = new JMenuItem[5];
 	
 	JTabbedPane pane = new JTabbedPane();	//탭
 	
@@ -282,7 +273,7 @@ class MessengerChat extends JFrame{
 	JTextArea ta = new JTextArea();
 	JTextField tf = new JTextField(10);
 	
-	String account[] = {"customer_id","UID","nickname"};
+	String account[] = {"login_id","UID","nickname"};
 	DefaultTableModel accountTM = new DefaultTableModel(account,0);
 	JPanel adminPanel = new JPanel();
 	JTable accountTable = new JTable(accountTM);
@@ -304,9 +295,10 @@ class MessengerChat extends JFrame{
 	}
 	void newComponent() {
 		item[0] = new JMenuItem("친구목록");
-		item[1] = new JMenuItem("로그아웃");
-		item[2] = new JMenuItem("관리자 모드");
-		item[3] = new JMenuItem("종료");
+		item[1] = new JMenuItem("닉네임 변경");
+		item[2] = new JMenuItem("로그아웃");
+		item[3] = new JMenuItem("관리자 모드");
+		item[4] = new JMenuItem("종료");
 	}
 	void setComponent() {
 		chatID.setHorizontalAlignment(SwingConstants.CENTER);
@@ -389,13 +381,9 @@ class Administrator extends JFrame{
 		setTitle("관리자 암호를 입력해주세요");
 		setSize(340,100);
 		setResizable(false);
-		newComponent();
 		setComponent();
 		addComponent();
 		setVisible(true);
-	}
-	void newComponent() {
-		
 	}
 	void setComponent() {
 		password.setHorizontalAlignment(SwingConstants.CENTER);
@@ -424,16 +412,19 @@ class FriendMenu extends JFrame{
 		setTitle("친구목록");
 		setSize(340,600);
 		setResizable(false);
-		newComponent();
 		setComponent();
 		addComponent();
 		setVisible(true);
 	}
-	void newComponent() {
-		
-	}
 	void setComponent() {
 		UID.setHorizontalAlignment(SwingConstants.CENTER);
+		DefaultTableCellRenderer ca = new DefaultTableCellRenderer();	// 테이블 기본 설정 만들기
+		ca.setHorizontalAlignment(SwingConstants.CENTER);	// 가운데 정렬
+		friendTable.setAutoCreateRowSorter(true);
+		friendTable.getTableHeader().setReorderingAllowed(false);
+		for(int i = 0; i<2; i++) {
+			friendTable.getColumnModel().getColumn(i).setCellRenderer(ca);
+		}
 	}
 	void addComponent() {
 		friendEnter.add(UID);
@@ -442,6 +433,32 @@ class FriendMenu extends JFrame{
 		friendEnter.add(delete);
 		add(friendEnter,BorderLayout.NORTH);
 		add(new JScrollPane(friendTable));
+	}
+}
+
+class ChangeNickname extends JFrame{
+	JButton change = new JButton("닉네임 변경");
+	JLabel nickname = new JLabel("닉네임");
+	JTextField input = new JTextField(15);
+	JPanel nickPanel = new JPanel();
+	
+	public ChangeNickname() {
+		setTitle("닉네임 변경");
+		setSize(340,100);
+		setResizable(false);
+		setComponent();
+		addComponent();
+		setVisible(true);
+	}
+	void setComponent() {
+		nickname.setHorizontalAlignment(SwingConstants.CENTER);
+		input.setHorizontalAlignment(SwingConstants.CENTER);
+	}
+	void addComponent() {
+		nickPanel.add(nickname);
+		nickPanel.add(input);
+		add(nickPanel);
+		add(change,BorderLayout.SOUTH);
 	}
 }
 
@@ -455,11 +472,12 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 	MessengerPassword MP;
 	Administrator Admin;
 	FriendMenu FM;
+	ChangeNickname CN;
 	
 	MessengerCustomerModel MCM;
 	MessengerRoomModel MRM;
-	MessengerChattingModel MCRM;
 	MessengerFriendModel MFM;
+	AccountDeleteModel ADM;
 	
 	Statement stmt = null; // SQL조작을 위한 선언
 	Connection con = null;
@@ -470,11 +488,14 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 	
 	int check = 0;
 	int joinCheck = 0;
-	String nowCustomer = "";
+	int nowCustomer = 0;
 	String nowNickName = "";
 	String nowRID = "";
 	int nowRoomNum = 0;
 	int lastRoomNum = 0;
+	int lastUID = 0;
+	String user = "";
+	String friends = "";
 	JTextArea ta[] = new JTextArea[10];
 
 	public Messenger() {
@@ -510,20 +531,31 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 	class signUpBtn implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			if(e.getSource() == MSU.confirm) {
-				confirmID();
+				confirmID_signUp();
 			}
 			else if(e.getSource() == MSU.signUp) {
-				signUp();
+				if(MSU.tf[1].getText().equals(MSU.tf[2].getText())) {
+					signUp();
+				}
+				else {
+					JOptionPane.showMessageDialog(null, "두 비밀번호가 다릅니다!", "비밀번호 재입력",
+				            JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		}
 	}
 	class passwordBtn implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			if(e.getSource() == MP.confirm) {
-				confirmID();
+				confirmID_password();
 			}
 			else if(e.getSource() == MP.changePW) {
-				changePW();
+				if(MP.tf[1].getText().equals(MP.tf[2].getText()))
+					changePW();
+				else {
+					JOptionPane.showMessageDialog(null, "두 비밀번호가 다릅니다!", "비밀번호 재입력",
+				            JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		}
 	}
@@ -541,9 +573,15 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 			switch (cmd) {
 				case "친구목록" : {
 					FM = new FriendMenu();
+					friendList();
 					FM.confirm.addActionListener(new friendBtn());
 					FM.delete.addActionListener(new friendBtn());
-					FM.friendTable.addMouseListener(new JTableClick());
+					FM.friendTable.addMouseListener(new FriendClick());
+					break;
+				}
+				case "닉네임 변경" : {
+					CN = new ChangeNickname();
+					CN.change.addActionListener(new changeNick());
 					break;
 				}
 				case "로그아웃" : {
@@ -593,11 +631,40 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 			if(Admin.PW.equals(Admin.input.getText())) {
 				Admin.dispose();
 				MC.pane.add("계정 관리", MC.adminPanel);
+				accountList();
+				MC.accountTable.addMouseListener(new AccountClick());
+				MC.deleteAccount.addActionListener(new accountDelete());
 			}
 		}
 	}
 	
-	class JTableClick extends JFrame implements MouseListener {	// 마우스 리스너 추가
+	class accountDelete implements ActionListener{
+		public void actionPerformed(ActionEvent e) {
+			int isDelete = JOptionPane.showConfirmDialog(null, "삭제하시겠습니까 ?");	//다이얼로그로 삭제시 확인
+			if (isDelete == 0) {
+				makeConnection();
+				String sql = "";
+				sql = "DELETE FROM customer WHERE login_id='" + ADM.login_id + "'";
+				try {
+					stmt.executeUpdate(sql);
+				} catch (SQLException sqle) {
+					System.out.println("isExist: DELETE SQL Error");
+				}
+				disConnection();
+			}
+			accountList();
+		}
+	}
+	
+	class changeNick implements ActionListener{
+		public void actionPerformed(ActionEvent e) {
+			if(e.getSource() == CN.change) {
+				changeNickname();
+			}
+		}
+	}
+	
+	class JTableClick extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {	// 클릭 시
 			if(e.getSource() == MC.personalRooms) {
 				int row = MC.personalRooms.getSelectedRow();	// 선택한 행 번호 받기
@@ -607,15 +674,19 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 				try {																								// 조건으로 넣기
 					rs = stmt.executeQuery(sql);
 					if (rs.next()) {
-						MRM = new MessengerRoomModel(rs.getString("room_id"), rs.getString("room_name"), rs.getInt("room_num"), rs.getString("host_id"));
-						modelToView_MRM();
+						MRM = new MessengerRoomModel(rs.getString("room_id"), rs.getString("room_name"), rs.getInt("room_num"), 
+								rs.getString("host_id"), rs.getString("user_id"));
+						MC.inputRoomName.setText(MRM.room_name);
+						MC.inputRID.setText(MRM.RID);
 						if(nowRID.equals(MRM.RID)) {
-							
+							//원래있던 채팅방
 						}
 						else {
 							MC.ta.setText("");
-							nowRID = MRM.RID;
 						}
+						nowRID = MRM.RID;
+						MC.RID.setText("RID : "+nowRID);
+						user = MRM.UID;
 						openChatRoom();
 					}
 				} catch (SQLException sqle) {
@@ -631,42 +702,54 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 				try {																								// 조건으로 넣기
 					rs = stmt.executeQuery(sql);
 					if (rs.next()) {
-						MRM = new MessengerRoomModel(rs.getString("room_id"), rs.getString("room_name"), rs.getInt("room_num"), rs.getString("host_id"));
+						MRM = new MessengerRoomModel(rs.getString("room_id"), rs.getString("room_name"), rs.getInt("room_num"), 
+								rs.getString("host_id"), rs.getString("user_id"));
 						if(nowRID.equals(MRM.RID)) {
 							//원래있던 채팅방
 						}
 						else {
 							MC.ta.setText("");
-							nowRID = MRM.RID;
 						}
+						nowRID = MRM.RID;
+						MC.RID.setText("RID : "+nowRID);
+						user = MRM.UID;
 						openChatRoom();
 					}
 				} catch (SQLException sqle) {
 					System.out.println("is Not Exist");
 				}
 				disConnection();
-				
 			}
-			else if(e.getSource() == FM.friendTable) {
+		}
+	}
+	
+	class FriendClick extends MouseAdapter {	// 마우스 리스너 추가
+		public void mouseClicked(MouseEvent e) {
+			if(e.getSource() == FM.friendTable) {
 				int row = FM.friendTable.getSelectedRow();	// 선택한 행 번호 받기
-				MC.inviteTF.setText((String)FM.friendTable.getModel().getValueAt(row, 1));
+				FM.tf.setText((String)FM.friendTable.getModel().getValueAt(row, 1));
 			}
 		}
-
-		public void mousePressed(MouseEvent e) {
-			
-		}
-
-		public void mouseReleased(MouseEvent e) {
-
-		}
-
-		public void mouseEntered(MouseEvent e) {
-
-		}
-
-		public void mouseExited(MouseEvent e) {
-
+	}
+	
+	class AccountClick extends MouseAdapter {	// 마우스 리스너 추가
+		public void mouseClicked(MouseEvent e) {
+			if(e.getSource() == MC.accountTable) {
+				int row = MC.accountTable.getSelectedRow();	// 선택한 행 번호 받기
+				makeConnection();
+				String sql = "";
+				sql = "SELECT * FROM customer WHERE login_id='" + MC.accountTable.getModel().getValueAt(row, 0) + "'";	// 선택된 행의 PK값을 가져와
+				try {																								// 조건으로 넣기
+					rs = stmt.executeQuery(sql);
+					if (rs.next()) {
+						ADM = new AccountDeleteModel(rs.getString("login_id"), rs.getString("password"), 
+								rs.getString("nickname"), rs.getInt("user_id"));
+					}
+				} catch (SQLException sqle) {
+					System.out.println("is Not Exist");
+				}
+				disConnection();
+			}
 		}
 	}
 	
@@ -700,16 +783,20 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 		}
 	}
 	
-	void modelToView_MRM() {
-		MC.inputRoomName.setText(MRM.room_name);
-		MC.inputRID.setText(MRM.RID);
-	}
-	void modelToView_MCM() {
-		FM.tf.setText(MCM.UID);
-	}
-	
-	void viewToModel_MRM() {
-		MRM = new MessengerRoomModel(MC.inputRID.getText(), MC.inputRoomName.getText(), lastRoomNum, nowCustomer);
+	void viewToModel_MCM() {
+		makeConnection();
+		String sql = "";
+		sql = "SELECT * FROM customer ORDER BY user_id DESC LIMIT 1";
+		try {
+			rs = stmt.executeQuery(sql);
+			if(rs.next())
+				lastUID = rs.getInt("user_id") + 1;
+		} catch (SQLException sqle) {
+			System.out.println("getData: SQL Error");
+		}
+		disConnection();
+		
+		MCM = new MessengerCustomerModel(MSU.tf[0].getText(), MSU.tf[1].getText(), MSU.tf[3].getText(), lastUID);
 	}
 	
 	void Setting() {
@@ -721,6 +808,8 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 			MC.item[i].addActionListener(new chatBtn());
 		}
 		MC.tf.addActionListener(this);
+		MC.invite.addActionListener(new roomManager());
+		MC.kick.addActionListener(new roomManager());
 		MC.remove(MC.UID);
 		MC.UID = new JLabel("UID : " + MCM.UID + "   ");
 		MC.UID.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -728,7 +817,7 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 		
 		makeConnection();
 		String sql = "";
-		sql = "SELECT * FROM chat_room WHERE room_id LIKE'" + "002%" + "'";
+		sql = "SELECT * FROM chat_room WHERE room_id LIKE'002%'";	//002로 시작하는 RID는 오픈채팅방
 		try {
 			rs = stmt.executeQuery(sql);
 			MC.openTM.setNumRows(0);	// 테이블 초기화
@@ -740,11 +829,11 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 			System.out.println("getData: SQL Error");
 		}
 		
-		sql = "SELECT * FROM chat_room";
+		sql = "SELECT * FROM chat_room ORDER BY room_num DESC LIMIT 1";
 		try {
 			rs = stmt.executeQuery(sql);
-			while(rs.next())
-				lastRoomNum = rs.getRow();
+			if(rs.next())
+				lastRoomNum = rs.getInt("room_num") + 1;
 		} catch (SQLException sqle) {
 			System.out.println("getData: SQL Error");
 		}
@@ -773,7 +862,7 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 				rs = stmt.executeQuery(sql);
 				if(rs.next()) {
 					MCM = new MessengerCustomerModel(rs.getString("login_id"), rs.getString("password"), 
-							rs.getString("nickname"), rs.getString("user_id"));
+							rs.getString("nickname"), rs.getInt("user_id"));
 					if(MCM.password.equals(ML.tf[1].getText())) {
 						nowCustomer = MCM.UID;
 						Setting();
@@ -794,11 +883,11 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 	
 	void addChatRoom() {
 		makeConnection();
-		viewToModel_MRM();
+		MRM = new MessengerRoomModel(MC.inputRID.getText(), MC.inputRoomName.getText(), lastRoomNum, Integer.toString(nowCustomer), "");
 		String sql = "";
 		try {
-			sql = "INSERT INTO chat_room (room_id,room_name,room_num,host_id) values ";
-			sql += "('" + MRM.RID + "','" + MRM.room_name + "','" + MRM.room_num + "','" + MRM.host_id + "')";
+			sql = "INSERT INTO chat_room (room_id,room_name,room_num,host_id,user_id) values ";
+			sql += "('" + MRM.RID + "','" + MRM.room_name + "','" + MRM.room_num + "','" + MRM.host_id + "','" + MRM.UID + "')";
 			stmt.executeUpdate(sql);
 		} catch (SQLException sqle) {
 			System.out.println(sqle.getMessage());
@@ -806,18 +895,16 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 		personalRoom();
 		disConnection();
 		clearTextFields();
+		lastRoomNum++;
 	}
 	
 	void deleteChatRoom() {
-		if(nowCustomer != MRM.host_id)
-			JOptionPane.showMessageDialog(null, "채팅방 주인이 아니면 삭제할수 없습니다!", "삭제 불가",
-                    JOptionPane.PLAIN_MESSAGE);
-		else if(nowCustomer == MRM.host_id) {
+		if(Integer.toString(nowCustomer).equals(MRM.host_id) ) {
 			int isDelete = JOptionPane.showConfirmDialog(null, "삭제하시겠습니까 ?");	//다이얼로그로 삭제시 확인
 			if (isDelete == 0) {
 				makeConnection();
 				String sql = "";
-				sql = "DELETE FROM chat_room where room_id='" + MRM.RID + "'";
+				sql = "DELETE FROM chat_room WHERE room_id='" + MRM.RID + "'";
 				try {
 					stmt.executeUpdate(sql);
 				} catch (SQLException sqle) {
@@ -828,34 +915,224 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 			}
 			clearTextFields();
 		}
-	}
+		else {
+			JOptionPane.showMessageDialog(null, "채팅방 주인이 아니면 삭제할수 없습니다!", "삭제 불가",
+                    JOptionPane.PLAIN_MESSAGE);
+		}
+	}	
 	
 	void inviteChatRoom() {
-		
+		makeConnection();
+		if(user.equals("")) {
+			user = MC.inviteTF.getText();
+			String sql = "";
+			sql = "UPDATE chat_room SET user_id = '" + user + "' WHERE room_id = '" + MRM.RID + "'";
+			try {
+				stmt.executeUpdate(sql);
+				JOptionPane.showMessageDialog(null, "초대가 완료되었습니다!", "초대완료",
+	                    JOptionPane.PLAIN_MESSAGE);
+				MC.inviteTF.setText("");
+			} catch (SQLException e) {
+				JOptionPane.showMessageDialog(null, "초대가 실패하였습니다.", "초대실패",
+	                    JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		else if(user.equals(MC.inviteTF.getText())) {
+			JOptionPane.showMessageDialog(null, "이미 존재하는 아이디입니다!", "초대실패",
+                    JOptionPane.ERROR_MESSAGE);
+		}
+		else {
+			user = user +","+ MC.inviteTF.getText();
+			String sql = "";
+			sql = "UPDATE chat_room SET user_id = '" + user + "' WHERE room_id = '" + MRM.RID + "'";
+			try {
+				stmt.executeUpdate(sql);
+				JOptionPane.showMessageDialog(null, "초대가 완료되었습니다!", "초대완료",
+	                    JOptionPane.PLAIN_MESSAGE);
+				MC.inviteTF.setText("");
+			} catch (SQLException e) {
+				JOptionPane.showMessageDialog(null, "초대가 실패하였습니다.", "초대실패",
+	                    JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		disConnection();
 	}
 	
 	void kickChatRoom() {
-		
+		String users[] = user.split(",");
+		String changeUsers = "";
+		for(int i = 0; i<users.length; i++) {
+			if(users[i].equals(MC.inviteTF.getText())) {
+				users[i] = "";
+			}
+			changeUsers += users[i];
+			if(i>0) {
+				changeUsers += ",";
+			}
+		}
+		user = changeUsers;
+		makeConnection();
+		String sql = "";
+		sql = "UPDATE chat_room SET user_id = '" + changeUsers + "' WHERE room_id = '" + MRM.RID + "'";
+		try {
+			stmt.executeUpdate(sql);
+			JOptionPane.showMessageDialog(null, MC.inviteTF.getText()+"님을 추방하였습니다!", "추방완료",
+                    JOptionPane.PLAIN_MESSAGE);
+			MC.inviteTF.setText("");
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, "추방이 실패하였습니다.", "추방실패",
+                    JOptionPane.ERROR_MESSAGE);
+		}
+		disConnection();
 	}
 	
 	void addFriend() {
-		
+		makeConnection();
+		String nickname = "";
+		String sql = "";
+		sql = "SELECT * FROM customer WHERE user_id = " + FM.tf.getText();
+		try {
+			rs = stmt.executeQuery(sql);
+			if(rs.next()) {
+				nickname = rs.getString("nickname");
+			}
+			sql = "INSERT INTO friends (user_id,friend_id,friend_nickname) values ";
+			sql += "('" + nowCustomer + "','" + FM.tf.getText() + "','" + nickname + "')";
+			try {
+				stmt.executeUpdate(sql);
+				JOptionPane.showMessageDialog(null, "추가가 완료되었습니다!", "친구추가완료",
+		            JOptionPane.PLAIN_MESSAGE);
+				sql = "INSERT INTO friends (user_id,friend_id,friend_nickname) values ";
+				sql += "('" + FM.tf.getText() + "','" + nowCustomer + "','" + nowNickName + "')";
+				try {
+					stmt.executeUpdate(sql);
+				}catch (SQLException e) {}
+				FM.tf.setText("");
+				friendList();
+			} catch (SQLException e) {
+				JOptionPane.showMessageDialog(null, "추가가 실패하였습니다.", "친구추가실패",
+		            JOptionPane.ERROR_MESSAGE);
+			}
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "상대가 존재하지 않습니다.", "검색실패",
+		            JOptionPane.ERROR_MESSAGE);
+		}
+		disConnection();
 	}
 	
 	void deleteFriend() {
-		
+		makeConnection();
+		String sql = "";
+		sql = "DELETE FROM friends WHERE friend_id = " + FM.tf.getText() + " AND user_id = " + nowCustomer;
+		try {
+			stmt.executeUpdate(sql);
+			JOptionPane.showMessageDialog(null, FM.tf.getText()+"님을 친구삭제하였습니다!", "삭제완료",
+                    JOptionPane.PLAIN_MESSAGE);
+			sql = "DELETE FROM friends WHERE friend_id = " + nowCustomer + " AND user_id = " + FM.tf.getText();
+			try {
+				stmt.executeUpdate(sql);
+			} catch (SQLException e) {}
+			FM.tf.setText("");
+			friendList();
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, "친구삭제가 실패하였습니다.", "삭제실패",
+                    JOptionPane.ERROR_MESSAGE);
+		}
+		disConnection();
 	}
 	
-	void confirmID() {
-		
+	void confirmID_password() {
+		makeConnection();
+		String sql = "";
+		sql = "SELECT * FROM customer WHERE login_id = " + MP.tf[0].getText();
+		try {
+			rs = stmt.executeQuery(sql);
+			if(rs.next()) {
+				JOptionPane.showMessageDialog(null, "아이디를 확인했습니다.", "확인완료",
+						JOptionPane.PLAIN_MESSAGE);
+				nowCustomer = rs.getInt("user_id");
+				MP.tf[1].setEditable(true);
+				MP.tf[2].setEditable(true);
+				MP.changePW.setEnabled(true);
+			}
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, "아이디가 없습니다!", "아이디 없음",
+		            JOptionPane.ERROR_MESSAGE);
+			
+		}
+		disConnection();
+	}
+	void confirmID_signUp() {
+		makeConnection();
+		String sql = "";
+		sql = "SELECT * FROM customer WHERE login_id = " + MSU.tf[0].getText();
+		try {
+			rs = stmt.executeQuery(sql);
+			if(rs.next()) {
+				JOptionPane.showMessageDialog(null, "아이디가 존재합니다.", "중복된 아이디",
+						JOptionPane.ERROR_MESSAGE);
+			}
+			else {
+				JOptionPane.showMessageDialog(null, "아이디 사용이 가능합니다!", "확인완료",
+			            JOptionPane.PLAIN_MESSAGE);
+				MSU.tf[1].setEditable(true);
+				MSU.tf[2].setEditable(true);
+				MSU.tf[3].setEditable(true);
+				MSU.signUp.setEnabled(true);
+			}
+		} catch (SQLException e) {}
+		disConnection();
 	}
 	
 	void signUp() {
-		
+		viewToModel_MCM();
+		makeConnection();
+		String sql = "";
+		sql = "INSERT INTO customer (login_id,password,nickname,user_id) values";
+		sql += "('"+MCM.login_id+"','"+MCM.password+"','"+MCM.nickname+"','"+MCM.UID+"')";
+		try {
+			stmt.executeUpdate(sql);
+			JOptionPane.showMessageDialog(null, "아이디가 등록되었습니다.", "아이디 등록성공",
+		            JOptionPane.PLAIN_MESSAGE);
+			MSU.dispose();
+		} catch (SQLException e2) {
+			JOptionPane.showMessageDialog(null, "아이디 등록에 실패하였습니다!", "실패",
+		            JOptionPane.ERROR_MESSAGE);
+		}
+		disConnection();
 	}
 	
 	void changePW() {
-		
+		makeConnection();
+		String sql = "";
+		sql = "UPDATE customer SET password = '" + MP.tf[2].getText() + "' WHERE user_id = " + nowCustomer;
+		try {
+			stmt.executeUpdate(sql);
+			JOptionPane.showMessageDialog(null, "비밀번호가 변경되었습니다!", "변경완료",
+                    JOptionPane.PLAIN_MESSAGE);
+			MP.dispose();
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, "비밀번호 변경이 실패하였습니다.", "변경실패",
+                    JOptionPane.ERROR_MESSAGE);
+		}
+		disConnection();
+	}
+	
+	void changeNickname() {
+		makeConnection();
+		String sql = "";
+		sql = "UPDATE customer SET nickname = '" + CN.input.getText() + "' WHERE user_id = " + nowCustomer;
+		try {
+			stmt.executeUpdate(sql);
+			JOptionPane.showMessageDialog(null, "닉네임이 변경되었습니다!", "변경완료",
+                    JOptionPane.PLAIN_MESSAGE);
+			nowNickName = CN.input.getText();
+			CN.dispose();
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, "닉네임 변경이 실패하였습니다.", "변경실패",
+                    JOptionPane.ERROR_MESSAGE);
+		}
+		disConnection();
 	}
 	
 	void openChatRoom() {
@@ -873,8 +1150,19 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 				io.printStackTrace();
 			}
 		}
+		MC.invitePanel.remove(MC.RID);
+		MC.invitePanel.remove(MC.inviteLabel);
+		MC.invitePanel.remove(MC.inviteTF);
+		MC.invitePanel.remove(MC.invite);
+		MC.nowChatRoom.remove(MC.invitePanel);
+		MC.invitePanel.add(MC.RID);
+		MC.invitePanel.add(MC.inviteLabel);
+		MC.invitePanel.add(MC.inviteTF);
+		MC.invitePanel.add(MC.invite);
+		MC.invitePanel.add(MC.kick);
+		MC.nowChatRoom.add(MC.invitePanel,BorderLayout.NORTH);
+		ta[MRM.room_num].setText("");
 		MC.nowChatRoom.remove(ta[nowRoomNum]);
-		MC.RID = new JLabel("RID : " + MRM.RID);
 		MC.nowChatRoom.add(new JScrollPane(ta[MRM.room_num]));
 		service();
 		check++;
@@ -889,13 +1177,47 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 	void personalRoom() {
 		makeConnection();
 		String sql = "";
-		sql = "SELECT * FROM chat_room WHERE host_id LIKE'" + nowCustomer +"' OR user_id LIKE'" + nowCustomer + "'" ;
+		sql = "SELECT * FROM chat_room WHERE host_id LIKE'" + nowCustomer +"' OR user_id LIKE'%" + nowCustomer + "%'" ;
 		try {
 			rs = stmt.executeQuery(sql);
 			MC.personalTM.setNumRows(0);	// 테이블 초기화
 			while (rs.next()) {
 				MC.personalTM.addRow(	// 개인 채팅방 목록 불러오기
 						new Object[] { rs.getString("room_name"), rs.getString("room_id")});
+			}
+		} catch (SQLException sqle) {
+			System.out.println("getData: SQL Error");
+		}
+		disConnection();
+	}
+	
+	void friendList() {
+		makeConnection();
+		String sql =  "";
+		sql = "SELECT * FROM friends WHERE user_id LIKE'" + nowCustomer + "'";
+		try {
+			rs = stmt.executeQuery(sql);
+			FM.friendTM.setNumRows(0);	// 테이블 초기화
+			while (rs.next()) {
+				FM.friendTM.addRow(	// 오픈 채팅방 목록 불러오기
+						new Object[] { rs.getString("friend_nickname"), rs.getString("friend_id")});
+			}
+		} catch (SQLException sqle) {
+			System.out.println("getData: SQL Error");
+		}
+		disConnection();
+	}
+	
+	void accountList() {
+		makeConnection();
+		String sql =  "";
+		sql = "SELECT * FROM customer";
+		try {
+			rs = stmt.executeQuery(sql);
+			MC.accountTM.setNumRows(0);	// 테이블 초기화
+			while (rs.next()) {
+				MC.accountTM.addRow(	// 오픈 채팅방 목록 불러오기
+						new Object[] { rs.getString("login_id"), rs.getString("user_id"), rs.getString("nickname")});
 			}
 		} catch (SQLException sqle) {
 			System.out.println("getData: SQL Error");
@@ -1028,21 +1350,13 @@ class ChatHandlerObject extends Thread //처리해주는 곳(소켓에 대한 정보가 담겨있
 	}
 	public void run(){
 		InfoDTO dto = null;
-		String nickName;														//닉네임 데베로 처리 변경
+		String nickName;
 		try{
 			while(true){
 				dto=(InfoDTO)reader.readObject();
 				nickName=dto.getNickName();
 				if(dto.getCommand()==Info.EXIT){	//사용자 접속 해제
 					InfoDTO sendDto = new InfoDTO();
-					//나가려고 exit를 보낸 클라이언트에게 답변 보내기
-					//sendDto.setCommand(Info.EXIT);
-					//writer.writeObject(sendDto);
-					//writer.flush();
-
-					//reader.close();
-					//writer.close();
-					//socket.close();
 					//남아있는 클라이언트에게 퇴장메세지 보내기
 					list.remove(this);
 
@@ -1063,7 +1377,7 @@ class ChatHandlerObject extends Thread //처리해주는 곳(소켓에 대한 정보가 담겨있
 					sendDto.setMessage("["+nickName+"]"+ dto.getMessage());
 					broadcast(sendDto);
 				}
-			}//while
+			}
 
 		} catch(IOException e){
 			e.printStackTrace();

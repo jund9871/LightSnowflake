@@ -39,13 +39,13 @@ class InfoDTO implements Serializable{
 class MessengerRoomModel{
 	String RID;		//Room_ID
 	String room_name;
-	int room_num;
+	int room_port;
 	String host_id;
 	String UID;
-	MessengerRoomModel(String RID, String room_name, int room_num, String host_id, String UID) {
+	MessengerRoomModel(String RID, String room_name, int room_port, String host_id, String UID) {
 		this.RID = RID;
 		this.room_name = room_name;
-		this.room_num = room_num;
+		this.room_port = room_port;
 		this.host_id = host_id;
 		this.UID = UID;
 	}
@@ -92,9 +92,9 @@ class MessengerLogin extends JFrame{
 	JLabel info[] = new JLabel[2];
 	JTextField tf[] = new JTextField[2];
 	JButton btn[] = new JButton[3];
-	JPanel input = new JPanel();	//info레이블과 텍스트 필드 2개가 들어간 패널
-	JPanel login = new JPanel();	//input패널과 login버튼이 들어간 패널
-	JPanel otherBtn = new JPanel();	//회원가입 버튼과 비밀번호 찾기 버튼이 들어간 패널
+	JPanel input = new JPanel();
+	JPanel login = new JPanel();
+	JPanel otherBtn = new JPanel();
 	GridLayout grid = new GridLayout(2,2,5,5);
 	
 	public MessengerLogin() {
@@ -242,14 +242,14 @@ class MessengerPassword extends JFrame{
 
 class MessengerChat extends JFrame{
 	String roomList[] = {"채팅방 이름","RID"};
-	JMenuBar mb = new JMenuBar();	//메뉴
+	JMenuBar mb = new JMenuBar();
 	JMenu settingMenu = new JMenu("설정");
 	JMenuItem item[] = new JMenuItem[5];
 	
-	JTabbedPane pane = new JTabbedPane();	//탭
+	JTabbedPane pane = new JTabbedPane();
 	
 	JLabel roomName = new JLabel("채팅방 이름");
-	JLabel chatID = new JLabel("RID");	//채팅창 아이디로 선택 (즐겨찾기 추가필요)
+	JLabel chatID = new JLabel("RID");
 	JTextField inputRoomName = new JTextField(10);
 	JTextField inputRID = new JTextField(10);
 	JButton enter = new JButton("등록");
@@ -257,14 +257,14 @@ class MessengerChat extends JFrame{
 	
 	JButton deleteRoom = new JButton("삭제");
 	DefaultTableModel personalTM = new DefaultTableModel(roomList, 0);
-	JPanel personalChatRoom = new JPanel();	//채팅방 즐겨찾기 테이블로 만들기
+	JPanel personalChatRoom = new JPanel();
 	JTable personalRooms = new JTable(personalTM);
 	
 	DefaultTableModel openTM = new DefaultTableModel(roomList, 0);
-	JPanel openChatRoom = new JPanel();	//오픈채팅방 목록 테이블로 만들기
+	JPanel openChatRoom = new JPanel();
 	JTable openRooms = new JTable(openTM);
 	
-	JPanel nowChatRoom = new JPanel();	//현재 들어가진 채팅방 표시
+	JPanel nowChatRoom = new JPanel();
 	JLabel inviteLabel = new JLabel("UID :");
 	JTextField inviteTF = new JTextField(10);
 	JButton invite = new JButton("초대");
@@ -278,9 +278,10 @@ class MessengerChat extends JFrame{
 	JPanel adminPanel = new JPanel();
 	JTable accountTable = new JTable(accountTM);
 	JButton deleteAccount = new JButton("삭제");
+	JButton deleteChat = new JButton("채팅방 삭제");
 	
 	JLabel noneRoom = new JLabel("열린 채팅방이 없습니다.");
-	JLabel UID = new JLabel("UID : 00000000   ");
+	JLabel UID = new JLabel("UID : 0   ");
 	JLabel RID = new JLabel("RID : 00000000");
 	
 	public MessengerChat() {
@@ -463,9 +464,6 @@ class ChangeNickname extends JFrame{
 }
 
 public class Messenger extends JFrame implements ActionListener,Runnable{
-	ChatServerObject CSO;	//서버 생성(현재 포트 9500고정)
-	ChatServerObject CSO1;
-	ChatServerObject CSO2;
 	MessengerLogin ML;
 	MessengerChat MC;
 	MessengerSignUp MSU;
@@ -487,27 +485,17 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 	private ObjectOutputStream writer=null;
 	
 	int check = 0;
-	int joinCheck = 0;
 	int nowCustomer = 0;
 	String nowNickName = "";
 	String nowRID = "";
-	int nowRoomNum = 0;
 	int lastRoomNum = 0;
 	int lastUID = 0;
 	String user = "";
-	String friends = "";
-	JTextArea ta[] = new JTextArea[10];
 
 	public Messenger() {
 		ML = new MessengerLogin();
 		for(int i = 0; i<3; i++)
 			ML.btn[i].addActionListener(new loginBtn());
-		for(int j = 0; j<10; j++) {
-			ta[j] = new JTextArea();
-			ta[j].setEditable(false);
-			ta[j].setBackground(Color.LIGHT_GRAY);
-		}
-		CSO = new ChatServerObject(9500);
 	}
 	
 	class loginBtn implements ActionListener{
@@ -585,6 +573,16 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 					break;
 				}
 				case "로그아웃" : {
+					try{
+						InfoDTO dto = new InfoDTO();
+						dto.setNickName(nowNickName);
+						dto.setCommand(Info.EXIT);
+						writer.writeObject(dto);
+						writer.flush();
+					}catch(IOException io){
+						io.printStackTrace();
+					}
+					check = 0;
 					MC.dispose();
 					ML = new MessengerLogin();
 					for(int i = 0; i<3; i++)
@@ -597,6 +595,15 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 					break;
 				}
 				case "종료" : {
+					try{
+						InfoDTO dto = new InfoDTO();
+						dto.setNickName(nowNickName);
+						dto.setCommand(Info.EXIT);
+						writer.writeObject(dto);
+						writer.flush();
+					}catch(IOException io){
+						io.printStackTrace();
+					}
 					System.exit(0);		//프로세스 종료
 					break;
 				}
@@ -631,9 +638,11 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 			if(Admin.PW.equals(Admin.input.getText())) {
 				Admin.dispose();
 				MC.pane.add("계정 관리", MC.adminPanel);
+				MC.add(MC.deleteChat, BorderLayout.SOUTH);
 				accountList();
 				MC.accountTable.addMouseListener(new AccountClick());
 				MC.deleteAccount.addActionListener(new accountDelete());
+				MC.deleteChat.addActionListener(new roomDelete_admin());
 			}
 		}
 	}
@@ -656,6 +665,47 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 		}
 	}
 	
+	class roomDelete_admin implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			if(e.getSource() == MC.deleteChat) {
+				int isDelete = JOptionPane.showConfirmDialog(null, "삭제하시겠습니까 ?");
+				if (isDelete == 0) {
+					makeConnection();
+					String sql = "";
+					sql = "DELETE FROM chat_room WHERE room_id='" + MRM.RID + "'";
+					try {
+						stmt.executeUpdate(sql);
+					} catch (SQLException sqle) {
+						System.out.println("isExist: DELETE SQL Error");
+					}
+					sql = "SELECT * FROM chat_room WHERE room_id LIKE'002%'";	//002로 시작하는 RID는 오픈채팅방
+					try {
+						rs = stmt.executeQuery(sql);
+						MC.openTM.setNumRows(0);	// 테이블 초기화
+						while (rs.next()) {
+							MC.openTM.addRow(	// 오픈 채팅방 목록 불러오기
+									new Object[] { rs.getString("room_name"), rs.getString("room_id")});
+						}
+					} catch (SQLException sqle) {
+						System.out.println("getData: SQL Error");
+					}
+					
+					sql = "SELECT * FROM chat_room ORDER BY room_port DESC LIMIT 1";
+					try {
+						rs = stmt.executeQuery(sql);
+						if(rs.next())
+							lastRoomNum = rs.getInt("room_port") + 1;
+					} catch (SQLException sqle) {
+						System.out.println("getData: SQL Error");
+					}
+					personalRoom();
+					disConnection();
+					MC.pane.remove(MC.nowChatRoom);
+				}
+			}
+		}
+	}
+	
 	class changeNick implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			if(e.getSource() == CN.change) {
@@ -674,7 +724,7 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 				try {																								// 조건으로 넣기
 					rs = stmt.executeQuery(sql);
 					if (rs.next()) {
-						MRM = new MessengerRoomModel(rs.getString("room_id"), rs.getString("room_name"), rs.getInt("room_num"), 
+						MRM = new MessengerRoomModel(rs.getString("room_id"), rs.getString("room_name"), rs.getInt("room_port"), 
 								rs.getString("host_id"), rs.getString("user_id"));
 						MC.inputRoomName.setText(MRM.room_name);
 						MC.inputRID.setText(MRM.RID);
@@ -687,6 +737,7 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 						nowRID = MRM.RID;
 						MC.RID.setText("RID : "+nowRID);
 						user = MRM.UID;
+						System.out.println(MRM.room_port);
 						openChatRoom();
 					}
 				} catch (SQLException sqle) {
@@ -702,7 +753,7 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 				try {																								// 조건으로 넣기
 					rs = stmt.executeQuery(sql);
 					if (rs.next()) {
-						MRM = new MessengerRoomModel(rs.getString("room_id"), rs.getString("room_name"), rs.getInt("room_num"), 
+						MRM = new MessengerRoomModel(rs.getString("room_id"), rs.getString("room_name"), rs.getInt("room_port"), 
 								rs.getString("host_id"), rs.getString("user_id"));
 						if(nowRID.equals(MRM.RID)) {
 							//원래있던 채팅방
@@ -829,11 +880,11 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 			System.out.println("getData: SQL Error");
 		}
 		
-		sql = "SELECT * FROM chat_room ORDER BY room_num DESC LIMIT 1";
+		sql = "SELECT * FROM chat_room ORDER BY room_port DESC LIMIT 1";
 		try {
 			rs = stmt.executeQuery(sql);
 			if(rs.next())
-				lastRoomNum = rs.getInt("room_num") + 1;
+				lastRoomNum = rs.getInt("room_port") + 1;
 		} catch (SQLException sqle) {
 			System.out.println("getData: SQL Error");
 		}
@@ -886,8 +937,8 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 		MRM = new MessengerRoomModel(MC.inputRID.getText(), MC.inputRoomName.getText(), lastRoomNum, Integer.toString(nowCustomer), "");
 		String sql = "";
 		try {
-			sql = "INSERT INTO chat_room (room_id,room_name,room_num,host_id,user_id) values ";
-			sql += "('" + MRM.RID + "','" + MRM.room_name + "','" + MRM.room_num + "','" + MRM.host_id + "','" + MRM.UID + "')";
+			sql = "INSERT INTO chat_room (room_id,room_name,room_port,host_id,user_id) values ";
+			sql += "('" + MRM.RID + "','" + MRM.room_name + "','" + MRM.room_port + "','" + MRM.host_id + "','" + MRM.UID + "')";
 			stmt.executeUpdate(sql);
 		} catch (SQLException sqle) {
 			System.out.println(sqle.getMessage());
@@ -1150,6 +1201,7 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 				io.printStackTrace();
 			}
 		}
+		MC.pane.remove(MC.nowChatRoom);
 		MC.invitePanel.remove(MC.RID);
 		MC.invitePanel.remove(MC.inviteLabel);
 		MC.invitePanel.remove(MC.inviteTF);
@@ -1161,12 +1213,12 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 		MC.invitePanel.add(MC.invite);
 		MC.invitePanel.add(MC.kick);
 		MC.nowChatRoom.add(MC.invitePanel,BorderLayout.NORTH);
-		ta[MRM.room_num].setText("");
-		MC.nowChatRoom.remove(ta[nowRoomNum]);
-		MC.nowChatRoom.add(new JScrollPane(ta[MRM.room_num]));
+		MC.ta.setText("");
+		MC.nowChatRoom.remove(MC.ta);
+		MC.nowChatRoom.add(new JScrollPane(MC.ta));
+		MC.pane.add("현재 채팅방",MC.nowChatRoom);
 		service();
 		check++;
-		nowRoomNum = MRM.room_num;
 	}
 	
 	public void clearTextFields() { // 모든 텍스트 필드 초기화
@@ -1216,7 +1268,7 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 			rs = stmt.executeQuery(sql);
 			MC.accountTM.setNumRows(0);	// 테이블 초기화
 			while (rs.next()) {
-				MC.accountTM.addRow(	// 오픈 채팅방 목록 불러오기
+				MC.accountTM.addRow(	// 계정 목록 불러오기
 						new Object[] { rs.getString("login_id"), rs.getString("user_id"), rs.getString("nickname")});
 			}
 		} catch (SQLException sqle) {
@@ -1235,13 +1287,14 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 			//dto.setNickName(nickName);
 			if(msg.equals("exit")){
 				dto.setCommand(Info.EXIT);
+				dto.setNickName(nowNickName);
 			} else {
 				dto.setCommand(Info.SEND);
 				dto.setMessage(msg);
 				dto.setNickName(nowNickName);
 			}
 			writer.writeObject(dto);
-			writer.flush();	//아마 행 넘기기
+			writer.flush();	//입력
 			MC.tf.setText("");	//치고 난 후 비우기
 			
 		}catch(IOException io){
@@ -1260,10 +1313,10 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 					writer.close();
 					socket.close();
 				} else if(dto.getCommand()==Info.SEND){
-					ta[nowRoomNum].append(dto.getMessage()+"\n");
+					MC.ta.append(dto.getMessage()+"\n");
 					
-					int pos=ta[nowRoomNum].getText().length();
-					ta[nowRoomNum].setCaretPosition(pos);
+					int pos=MC.ta.getText().length();
+					MC.ta.setCaretPosition(pos);
 				}
 			}catch(IOException e){
 				e.printStackTrace();
@@ -1275,9 +1328,9 @@ public class Messenger extends JFrame implements ActionListener,Runnable{
 	
 	public void service(){
 		//서버 IP 입력받기
-		String serverIP = "192.168.0.3";  //기본적으로 아이피 값이 입력되어 들어가게 됨
+		String serverIP = "192.168.0.3";  //기본적으로 아이피 값이 입력되어 들어가게 됨 //학교 아이피로 변경
 		try{
-			socket = new Socket(serverIP,9500);	//서버의 IP를 받아오고 임의의 포트 설정(같은 포트여야 서로 만날 수 있음(서버 개념))
+			socket = new Socket(serverIP,MRM.room_port);	//채팅방마다 포트 다르게 해야됨
 			//에러 발생
 			reader= new ObjectInputStream(socket.getInputStream());
 			writer = new ObjectOutputStream(socket.getOutputStream());
@@ -1316,11 +1369,9 @@ class ChatServerObject 	//채팅방 서버 생성
 {
 	private ServerSocket serverSocket;
 	private ArrayList <ChatHandlerObject> list;
-	static HashMap<String, Object> hash;
 	public ChatServerObject(int port){
 		try{
 			serverSocket= new ServerSocket (port);		//서버 포트 설정
-			hash = new HashMap<String, Object>();
 			System.out.println("서버 준비 완료");
 			list = new ArrayList<ChatHandlerObject>();
 			while(true){
